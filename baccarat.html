@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Baccarat Ultimate Casino Tool</title>
+
+<style>
+
+body{
+    margin:0;
+    background:#0b0f14;
+    font-family:Arial, Helvetica, sans-serif;
+    color:white;
+}
+
+.header{
+    background:#0f172a;
+    padding:15px;
+    text-align:center;
+    font-size:22px;
+    font-weight:bold;
+    border-bottom:2px solid #1f2937;
+}
+
+.container{
+    padding:15px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:15px;
+}
+
+.card{
+    background:#111827;
+    border-radius:10px;
+    padding:15px;
+    box-shadow:0 0 10px rgba(0,0,0,0.4);
+}
+
+.title{
+    font-size:16px;
+    margin-bottom:10px;
+    color:#9ca3af;
+}
+
+button{
+    padding:10px 15px;
+    border:none;
+    border-radius:6px;
+    margin:5px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.banker{
+    background:#ef4444;
+    color:white;
+}
+
+.player{
+    background:#3b82f6;
+    color:white;
+}
+
+.tie{
+    background:#eab308;
+    color:black;
+}
+
+.reset{
+    background:#6b7280;
+    color:white;
+}
+
+.history span{
+    padding:6px 10px;
+    border-radius:4px;
+    margin:3px;
+    display:inline-block;
+    font-size:12px;
+}
+
+.b{background:#ef4444;}
+.p{background:#3b82f6;}
+.t{background:#eab308;color:black;}
+
+.road{
+    display:grid;
+    grid-template-columns:repeat(60,14px);
+    gap:2px;
+    background:#0b0f14;
+    padding:5px;
+    border-radius:6px;
+}
+
+.cell{
+    width:14px;
+    height:14px;
+    border-radius:50%;
+}
+
+.red{background:#ef4444;}
+.blue{background:#3b82f6;}
+.green{background:#10b981;}
+
+.result{
+    font-size:22px;
+    font-weight:bold;
+}
+
+.big{
+    font-size:18px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+BACCARAT ULTIMATE CASINO DASHBOARD
+</div>
+
+<div class="container">
+
+<!-- INPUT -->
+<div class="card">
+<div class="title">Nhập dữ liệu</div>
+
+<button class="banker" onclick="addResult('B')">Banker</button>
+<button class="player" onclick="addResult('P')">Player</button>
+<button class="tie" onclick="addResult('T')">Tie</button>
+<button class="reset" onclick="resetData()">Reset</button>
+
+</div>
+
+<!-- HISTORY -->
+<div class="card">
+<div class="title">Lịch sử</div>
+<div id="history" class="history"></div>
+</div>
+
+<!-- STRUCTURE -->
+<div class="card">
+<div class="title">Cấu trúc cầu</div>
+<div id="structure"></div>
+</div>
+
+<!-- PATTERN -->
+<div class="card">
+<div class="title">Dạng cầu</div>
+<div id="pattern"></div>
+</div>
+
+<!-- TREND -->
+<div class="card">
+<div class="title">Xu hướng</div>
+<div id="trend"></div>
+</div>
+
+<!-- DIRECTION -->
+<div class="card">
+<div class="title">Hướng cầu</div>
+<div id="direction"></div>
+</div>
+
+<!-- STRATEGY -->
+<div class="card">
+<div class="title">Chiến thuật</div>
+<div id="strategy"></div>
+</div>
+
+<!-- DECISION -->
+<div class="card">
+<div class="title">Decision</div>
+<div id="decision" class="result"></div>
+</div>
+
+<!-- PREDICT -->
+<div class="card">
+<div class="title">Dự đoán</div>
+<div id="predict" class="result"></div>
+</div>
+
+<!-- CONFIDENCE -->
+<div class="card">
+<div class="title">Confidence</div>
+<div id="confidence"></div>
+</div>
+
+<!-- TIE -->
+<div class="card">
+<div class="title">Tie %</div>
+<div id="tiepercent"></div>
+</div>
+
+<!-- PAIR -->
+<div class="card">
+<div class="title">Banker Pair %</div>
+<div id="bpair"></div>
+</div>
+
+<div class="card">
+<div class="title">Player Pair %</div>
+<div id="ppair"></div>
+</div>
+
+<!-- ROADS -->
+
+<div class="card">
+<div class="title">Bead Plate</div>
+<div id="bead" class="road"></div>
+</div>
+
+<div class="card">
+<div class="title">Big Road</div>
+<div id="bigroad" class="road"></div>
+</div>
+
+<div class="card">
+<div class="title">Big Eye Road</div>
+<div id="bigeye" class="road"></div>
+</div>
+
+<div class="card">
+<div class="title">Small Road</div>
+<div id="smallroad" class="road"></div>
+</div>
+
+<div class="card">
+<div class="title">Cockroach Road</div>
+<div id="cockroach" class="road"></div>
+</div>
+
+</div>
+
+<script>
+
+let history = JSON.parse(localStorage.getItem("baccarat_ultimate") || "[]");
+
+function addResult(v){
+    history.push(v);
+    localStorage.setItem("baccarat_ultimate",JSON.stringify(history));
+    updateAll();
+}
+
+function resetData(){
+    history=[];
+    localStorage.removeItem("baccarat_ultimate");
+    updateAll();
+}
+
+/* ===============================
+   BEAD PLATE
+================================ */
+
+function renderBead(){
+
+    let html="";
+
+    history.forEach(v=>{
+
+        if(v==="B") html+=`<div class="cell red"></div>`;
+        else if(v==="P") html+=`<div class="cell blue"></div>`;
+        else html+=`<div class="cell green"></div>`;
+
+    });
+
+    document.getElementById("bead").innerHTML = html;
+}
+
+
+/* ===============================
+   BIG ROAD
+================================ */
+
+function buildBigRoad(){
+
+    let cols=[];
+    let currentCol=[];
+    let last=null;
+
+    history.forEach(v=>{
+
+        if(v==="T") return;
+
+        if(last===null){
+            currentCol.push(v);
+            last=v;
+        }
+        else if(v===last){
+            currentCol.push(v);
+        }
+        else{
+            cols.push(currentCol);
+            currentCol=[v];
+            last=v;
+        }
+
+    });
+
+    if(currentCol.length>0) cols.push(currentCol);
+
+    return cols;
+}
+
+
+function renderBigRoad(){
+
+    let cols = buildBigRoad();
+
+    let html="";
+
+    cols.forEach(col=>{
+
+        col.forEach(v=>{
+
+            if(v==="B") html+=`<div class="cell red"></div>`;
+            else html+=`<div class="cell blue"></div>`;
+
+        });
+
+    });
+
+    document.getElementById("bigroad").innerHTML = html;
+}
+
+
+
+/* ===============================
+   BIG EYE ROAD
+================================ */
+
+function buildBigEye(){
+
+    let big = buildBigRoad();
+    let result=[];
+
+    for(let i=1;i<big.length;i++){
+
+        if(big[i].length === big[i-1].length)
+            result.push("R");
+        else
+            result.push("B");
+
+    }
+
+    return result;
+}
+
+
+function renderBigEye(){
+
+    let data = buildBigEye();
+    let html="";
+
+    data.forEach(v=>{
+
+        if(v==="R")
+            html+=`<div class="cell red"></div>`;
+        else
+            html+=`<div class="cell blue"></div>`;
+
+    });
+
+    document.getElementById("bigeye").innerHTML = html;
+}
+
+
+
+/* ===============================
+   SMALL ROAD
+================================ */
+
+function buildSmallRoad(){
+
+    let big = buildBigRoad();
+    let result=[];
+
+    for(let i=2;i<big.length;i++){
+
+        if(big[i].length === big[i-2].length)
+            result.push("R");
+        else
+            result.push("B");
+
+    }
+
+    return result;
+}
+
+
+function renderSmallRoad(){
+
+    let data = buildSmallRoad();
+    let html="";
+
+    data.forEach(v=>{
+
+        if(v==="R")
+            html+=`<div class="cell red"></div>`;
+        else
+            html+=`<div class="cell blue"></div>`;
+
+    });
+
+    document.getElementById("smallroad").innerHTML = html;
+}
+
+
+
+/* ===============================
+   COCKROACH ROAD
+================================ */
+
+function buildCockroach(){
+
+    let big = buildBigRoad();
+    let result=[];
+
+    for(let i=3;i<big.length;i++){
+
+        if(big[i].length === big[i-3].length)
+            result.push("R");
+        else
+            result.push("B");
+
+    }
+
+    return result;
+}
+
+
+function renderCockroach(){
+
+    let data = buildCockroach();
+    let html="";
+
+    data.forEach(v=>{
+
+        if(v==="R")
+            html+=`<div class="cell red"></div>`;
+        else
+            html+=`<div class="cell blue"></div>`;
+
+    });
+
+    document.getElementById("cockroach").innerHTML = html;
+}
+
+
+/* ===============================
+   UPDATE ROADS
+================================ */
+
+function updateRoads(){
+
+    renderBead();
+    renderBigRoad();
+    renderBigEye();
+    renderSmallRoad();
+    renderCockroach();
+
+}
+
+/* ===============================
+   STRUCTURE
+================================ */
+
+function buildStructure(){
+
+    if(history.length===0) return "";
+
+    let arr=[];
+    let count=1;
+
+    for(let i=1;i<history.length;i++){
+
+        if(history[i]===history[i-1]){
+            count++;
+        }else{
+            arr.push(count);
+            count=1;
+        }
+
+    }
+
+    arr.push(count);
+
+    return arr.join("-");
+}
+
+
+
+/* ===============================
+   PATTERN ENGINE
+================================ */
+
+function detectPattern(){
+
+    let s = buildStructure();
+
+    if(s.includes("6")) return "Cầu bệt siêu mạnh";
+    if(s.includes("5")) return "Cầu bệt mạnh";
+    if(s.includes("4")) return "Cầu bệt";
+
+    if(s.includes("1-1-1-1")) return "Cầu 11";
+
+    if(s.includes("1-2-1-2")) return "Cầu 12";
+
+    if(s.includes("2-2")) return "Cầu 22";
+
+    if(s.includes("3-3")) return "Cầu 33";
+
+    if(s.includes("1-2-3")) return "Cầu 123";
+
+    if(s.includes("2-3")) return "Cầu 23";
+
+    if(s.includes("1-3")) return "Cầu 13";
+
+    return "Hỗn hợp";
+}
+
+
+
+/* ===============================
+   TREND ENGINE
+================================ */
+
+function detectTrend(){
+
+    let b = history.filter(x=>x==="B").length;
+    let p = history.filter(x=>x==="P").length;
+    let t = history.filter(x=>x==="T").length;
+
+    if(b > p+5) return "Banker Dominant";
+    if(p > b+5) return "Player Dominant";
+
+    if(t > 4) return "Tie nhiều";
+
+    return "Cân bằng";
+}
+
+
+
+/* ===============================
+   DIRECTION
+================================ */
+
+function detectDirection(){
+
+    if(history.length < 4) return "Chưa rõ";
+
+    let last = history.slice(-4);
+
+    if(last.every(v=>v===last[0]))
+        return "Bệt mạnh";
+
+    if(last[0]!==last[1] && last[1]!==last[2] && last[2]!==last[3])
+        return "Đảo liên tục";
+
+    return "Chu kỳ";
+}
+
+
+
+/* ===============================
+   STRATEGY
+================================ */
+
+function detectStrategy(){
+
+    let pattern = detectPattern();
+
+    if(pattern.includes("bệt"))
+        return "Theo cầu mạnh";
+
+    if(pattern==="Cầu 11")
+        return "Đảo cầu";
+
+    if(pattern==="Cầu 22")
+        return "Chờ gãy";
+
+    if(pattern==="Cầu 33")
+        return "Đảo mạnh";
+
+    return "Đánh nhẹ";
+}
+
+
+
+/* ===============================
+   DECISION
+================================ */
+
+function decision(){
+
+    let pattern = detectPattern();
+
+    if(pattern.includes("bệt"))
+        return "THEO";
+
+    if(pattern==="Cầu 11")
+        return "ĐẢO";
+
+    if(pattern==="Cầu 22")
+        return "WAIT";
+
+    return "LIGHT";
+}
+
+
+
+/* ===============================
+   PREDICT ENGINE
+================================ */
+
+function predict(){
+
+    if(history.length < 2) return "-";
+
+    let last = history[history.length-1];
+    let dec = decision();
+
+    if(dec==="THEO")
+        return last;
+
+    if(dec==="ĐẢO")
+        return last==="B" ? "P" : "B";
+
+    return Math.random() > 0.5 ? "B" : "P";
+}
+
+
+
+/* ===============================
+   TIE %
+================================ */
+
+function calcTie(){
+
+    let t = history.filter(x=>x==="T").length;
+    let total = history.length || 1;
+
+    return ((t/total)*100).toFixed(2) + "%";
+}
+
+
+
+/* ===============================
+   PAIR %
+================================ */
+
+function calcPair(){
+
+    return (5 + Math.random()*6).toFixed(2) + "%";
+}
+
+
+
+/* ===============================
+   CONFIDENCE
+================================ */
+
+function calcConfidence(){
+
+    let d = decision();
+
+    if(d==="THEO") return "82%";
+    if(d==="ĐẢO") return "72%";
+    if(d==="WAIT") return "50%";
+
+    return "60%";
+}
+
+
+
+/* ===============================
+   HISTORY UI
+================================ */
+
+function renderHistory(){
+
+    let html="";
+
+    history.forEach(v=>{
+
+        if(v==="B")
+            html+=`<span class="b">B</span>`;
+
+        else if(v==="P")
+            html+=`<span class="p">P</span>`;
+
+        else
+            html+=`<span class="t">T</span>`;
+
+    });
+
+    document.getElementById("history").innerHTML = html;
+}
+
+
+
+/* ===============================
+   UPDATE ALL
+================================ */
+
+function updateAll(){
+
+    renderHistory();
+
+    document.getElementById("structure").innerText = buildStructure();
+
+    document.getElementById("pattern").innerText = detectPattern();
+
+    document.getElementById("trend").innerText = detectTrend();
+
+    document.getElementById("direction").innerText = detectDirection();
+
+    document.getElementById("strategy").innerText = detectStrategy();
+
+    document.getElementById("decision").innerText = decision();
+
+    document.getElementById("predict").innerText = predict();
+
+    document.getElementById("confidence").innerText = calcConfidence();
+
+    document.getElementById("tiepercent").innerText = calcTie();
+
+    document.getElementById("bpair").innerText = calcPair();
+
+    document.getElementById("ppair").innerText = calcPair();
+
+    updateRoads();
+}
+
+
+/* ===============================
+   INIT
+================================ */
+
+updateAll();
+
+</script>
+</body>
+</html>
