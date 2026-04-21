@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tra cứu vé điện tử</title>
+<link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f3f5f9;
+            margin: 0;
+            padding: 10px;
+        }
+        .container {
+            max-width: 1000px; /* Dùng max-width thay vì width */
+            width: 95%; /* Tự co giãn trên màn hình nhỏ */
+            margin: 20px auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .logo {
+            font-weight: bold;
+            font-size: 20px;
+            color: #1e88e5;
+        }
+        .support {
+            color: green;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .box {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .title {
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        .search {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .search input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px; /* Font size 16px để iPhone không bị tự động zoom */
+        }
+        .search button {
+            background: #1e88e5;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Mặc định 2 cột cho máy tính */
+            gap: 15px;
+        }
+
+        /* Responsive: Khi màn hình nhỏ hơn 768px (điện thoại) */
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr; /* Chuyển thành 1 cột */
+            }
+            .header {
+                flex-direction: column;
+                gap: 5px;
+                text-align: center;
+            }
+        }
+
+        .card {
+            background: #fafafa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+        }
+        .row:last-child { border-bottom: none; }
+        .label { color: #555; }
+        .value { font-weight: bold; text-align: right; margin-left: 10px; }
+        .status { color: green; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div class="logo">TRA CỨU VÉ XE</div>
+        <div class="support">Hỗ trợ: 1900 4751</div>
+    </div>
+
+    <div class="box">
+        <div class="title">Tra cứu Vé điện tử</div>
+        <div class="subtitle">Tìm kiếm, tra cứu thông tin vé điện tử</div>
+
+        <div class="search">
+            <input type="text" id="code" placeholder="Nhập mã đặt chỗ">
+            <button onclick="window.searchTicket()">TÌM KIẾM</button>
+        </div>
+
+        <div id="result" style="display:none">
+            <div class="grid">
+                <div class="card" id="left"></div>
+                <div class="card" id="right"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyD4j_gq_aQ2H0YtjsUnVKvlbbpAY0FXJso",
+    authDomain: "web-ve.firebaseapp.com",
+    projectId: "web-ve",
+    storageBucket: "web-ve.firebasestorage.app",
+    messagingSenderId: "315502903053",
+    appId: "1:315502903053:web:30a2892c7a192452477a44",
+    measurementId: "G-4RCDLBJHFR"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.searchTicket = async function() {
+    const code = document.getElementById("code").value;
+    if(!code) return alert("Vui lòng nhập mã!");
+
+    // DÁN VÀO ĐÂY (Sau dòng 156 trong ảnh của bạn)
+    window.history.pushState({}, '', `?code=${code}`);
+
+    const ref = doc(db, "tickets", code);
+    try {
+        const snap = await getDoc(ref);
+        // ... giữ nguyên phần còn lại
+        if (!snap.exists()) {
+            alert("Không tìm thấy vé");
+            return;
+        }
+
+        const t = snap.data();
+        document.getElementById("result").style.display = "block";
+
+        document.getElementById("left").innerHTML = `
+<div class="row"><div class="label">Giá vé</div><div class="value price">${t.price}</div></div>
+<div class="row"><div class="label">Thời gian mua vé</div><div class="value">${t.time}</div></div>
+<div class="row"><div class="label">Mã tra cứu</div><div class="value">${t.lookup_code}</div></div>
+<div class="row"><div class="label">Link tra cứu</div><div class="value">${t.link}</div></div>
+<div class="row"><div class="label">Trạng thái</div><div class="value status">${t.status}</div></div>
+
+<h3>Thông tin hành khách</h3>
+<div class="row"><div class="label">SĐT</div><div class="value">${t.phone_customer}</div></div>
+<div class="row"><div class="label">Họ tên</div><div class="value">${t.name_customer}</div></div>
+<div class="row"><div class="label">Email</div><div class="value">${t.email_customer}</div></div>
+`;
+
+document.getElementById("right").innerHTML = `
+<h3>Thông tin chuyến đi</h3>
+
+<div class="row">
+<div class="label">Mã chuyến đi</div>
+<div class="value">${t.trip_code}</div>
+</div>
+
+<div class="row">
+<div class="label">Biển số xe</div>
+<div class="value">${t.plate}</div>
+</div>
+
+<div class="row">
+<div class="label">Tuyến vận chuyển</div>
+<div class="value">${t.route}</div>
+</div>
+
+<div class="row">
+<div class="label">Điểm xuống</div>
+<div class="value">${t.drop}</div>
+</div>
+
+<div class="row">
+<div class="label">Thời gian khởi hành</div>
+<div class="value">${t.start}</div>
+</div>
+
+<h3>Thông tin doanh nghiệp</h3>
+
+<div class="row">
+<div class="label">Tên doanh nghiệp</div>
+<div class="value">${t.company}</div>
+</div>
+
+<div class="row">
+<div class="label">Mã số thuế</div>
+<div class="value">${t.tax}</div>
+</div>
+
+<div class="row">
+<div class="label">SĐT doanh nghiệp</div>
+<div class="value">${t.phone_company}</div>
+</div>
+`;
+    } catch (e) {
+        alert("Lỗi kết nối database!");
+        console.error(e);
+    }
+}
+// Tự động kiểm tra mã khi mở web từ mã QR
+window.addEventListener('load', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const codeFromQR = urlParams.get('code'); // Lấy mã sau chữ ?code=
+    
+    if (codeFromQR) {
+        document.getElementById("code").value = codeFromQR;
+        window.searchTicket(); // Tự động bấm nút tìm kiếm luôn
+    }
+});
+</script>
+</body>
+</html>
